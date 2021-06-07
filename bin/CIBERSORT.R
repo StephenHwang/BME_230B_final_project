@@ -47,10 +47,10 @@ library(preprocessCore)
 
 #Core algorithm
 CoreAlg <- function(X, y, absolute, abs_method){
-    
+
     #try different values of nu
     svn_itor <- 3
-    
+
     res <- function(i){
         if(i==1){nus <- 0.25}
         if(i==2){nus <- 0.5}
@@ -61,10 +61,10 @@ CoreAlg <- function(X, y, absolute, abs_method){
 
     if(Sys.info()['sysname'] == 'Windows') out <- mclapply(1:svn_itor, res, mc.cores=1) else
     out <- mclapply(1:svn_itor, res, mc.cores=svn_itor)
-    
+
     nusvm <- rep(0,svn_itor)
     corrv <- rep(0,svn_itor)
-    
+
     #do cibersort
     t <- 1
     while(t <= svn_itor) {
@@ -77,18 +77,18 @@ CoreAlg <- function(X, y, absolute, abs_method){
         corrv[t] <- cor(k, y)
         t <- t + 1
     }
-    
+
     #pick best model
     rmses <- nusvm
     mn <- which.min(rmses)
     model <- out[[mn]]
-    
+
     #get and normalize coefficients
     q <- t(model$coefs) %*% model$SV
     q[which(q<0)]<-0
     if(!absolute || abs_method == 'sig.score') w <- (q/sum(q)) #relative space (returns fractions)
     if(absolute && abs_method == 'no.sumto1') w <- q #absolute space (returns scores)
-    
+
     mix_rmse <- rmses[mn]
     mix_r <- corrv[mn]
 
@@ -101,10 +101,10 @@ doPerm <- function(perm, X, Y, absolute, abs_method){
     itor <- 1
     Ylist <- as.list(data.matrix(Y))
     dist <- matrix()
-    
+
     while(itor <= perm){
         #print(itor)
-        
+
         #random mixture
         yr <- as.numeric(Ylist[sample(length(Ylist),dim(X)[1])])
 
@@ -113,13 +113,13 @@ doPerm <- function(perm, X, Y, absolute, abs_method){
 
         #run CIBERSORT core algorithm
         result <- CoreAlg(X, yr, absolute, abs_method)
-        
+
         mix_r <- result$mix_r
-        
+
         #store correlation
         if(itor == 1) {dist <- mix_r}
         else {dist <- rbind(dist, mix_r)}
-        
+
         itor <- itor + 1
     }
     newList <- list("dist" = dist)
@@ -127,9 +127,9 @@ doPerm <- function(perm, X, Y, absolute, abs_method){
 
 #main function
 CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE, abs_method='sig.score'){
-    
+
     if(absolute && abs_method != 'no.sumto1' && abs_method != 'sig.score') stop("abs_method must be set to either 'sig.score' or 'no.sumto1'")
-    
+
     #read in data
     X <- read.table(sig_matrix,header=T,sep="\t",row.names=1,check.names=F)
     Y <- read.table(mixture_file, header=T, sep="\t",check.names=F)
@@ -143,16 +143,16 @@ CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE,
 
     X <- data.matrix(X)
     Y <- data.matrix(Y)
-    
+
     #order
     X <- X[order(rownames(X)),]
     Y <- Y[order(rownames(Y)),]
 
     P <- perm #number of permutations
-    
+
     #anti-log if max < 50 in mixture file
     if(max(Y) < 50) {Y <- 2^Y}
-    
+
     #quantile normalization of mixture file
     if(QN == TRUE){
         tmpc <- colnames(Y)
@@ -176,10 +176,10 @@ CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE,
 
     #standardize sig matrix
     X <- (X - mean(X)) / sd(as.vector(X))
-    
+
     #empirical null distribution of correlation coefficients
     if(P > 0) {nulldist <- sort(doPerm(P, X, Y, absolute, abs_method)$dist)}
-    
+
     header <- c('Mixture',colnames(X),"P-value","Correlation","RMSE")
     if(absolute) header <- c(header, paste('Absolute score (',abs_method,')',sep=""))
 
@@ -190,20 +190,20 @@ CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE,
 
     #iterate through mixtures
     while(itor <= mixtures){
-        
+
         y <- Y[,itor]
-        
+
         #standardize mixture
         y <- (y - mean(y)) / sd(y)
 
         #run SVR core algorithm
         result <- CoreAlg(X, y, absolute, abs_method)
-        
+
         #get results
         w <- result$w
         mix_r <- result$mix_r
         mix_rmse <- result$mix_rmse
-        
+
         if(absolute && abs_method == 'sig.score') {
             w <- w * median(Y[,itor]) / Ymedian
         }
@@ -216,14 +216,14 @@ CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE,
         if(absolute) out <- c(out, sum(w))
         if(itor == 1) {output <- out}
         else {output <- rbind(output, out)}
-        
+
         itor <- itor + 1
-        
+
     }
 
     #save results
     write.table(rbind(header,output), file="CIBERSORT-Results.txt", sep="\t", row.names=F, col.names=F, quote=F)
-    
+
     #return matrix object containing all results
     obj <- rbind(header,output)
     obj <- obj[,-1]
