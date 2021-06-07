@@ -3,10 +3,6 @@
 home.dir <- '/home/stephen/Documents/classes/bme/230B/decon/'
 setwd(home.dir)
 
-# .libPaths(c("/soe/vfriedl/R/x86_64-redhat-linux-gnu-library/3.5"
-            # ,"/projects/sysbio/apps/x86_64/Rlib"
-            # ,"/usr/lib64/R/library"
-            # ,"/usr/share/R/library"))
 source('bin/CIBERSORT.R')
 
 # run Cibersort w/
@@ -18,29 +14,59 @@ source('bin/CIBERSORT.R')
 # (5) absolute (default=FALSE): run Cibersort in absolute mode (not fractions)
 # (6) abs_method: if set absolute=TRUE, choose 'no.sumto1' or 'sig.score'. 'no.sumto1' removes constraints
 
-#run Cibersort, remember the first file should be the signature matrix, the second file is mixture matrix
-# example
-# sig.matrix <-"PBMC_signature_matrix/PBMC_example_signature_matrix_v1.tsv"
+# example datasets:
+# sig.matrix <-"signature_matrix/PBMC_example_signature_matrix_v1.tsv"
 # mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_0.tsv"
 
-sig.matrix <-"signature_matrix/LM5.txt"
+# Cell types:
+#   B cells
+#   T cells
+#   Monocytes
+#   Nature killer cells
+#   Dendritic cells
+
+
+# sig.matrix <-"signature_matrix/LM5.txt"        # 550 genes
+# sig.matrix <-"signature_matrix/holiday.txt"    # too many genes, takes too long to run (12366)
+
+sig.matrix <-"signature_matrix/LM_joint.txt"    # too many genes, takes too long to run (12366)
 mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_0.tsv"
 
 results <- CIBERSORT(sig.matrix, mixture.matrix, perm=100, QN=FALSE, absolute=TRUE, abs_method='no.sumto1')
 write.table(results,file="./Cibersort_ExampleOutput.tsv",sep = "\t", quote = F,row.names = T, col.names = T) # write result table to file
 # 1:21 -
 
+# join columns and re-name
+merged_results <- cbind(
+rowSums(results[,  c("B cells naive", "B cells memory" )]),
+rowSums(results[, c("T cells CD8",
+            "T cells CD4 naive",
+            "T cells CD4 memory resting",
+            "T cells CD4 memory activated",
+            "T cells follicular helper",
+            "T cells regulatory (Tregs)",
+            "T cells gamma delta")]),
+rowSums(results[, c("NK cells resting", "NK cells activated")]),
+results[, c("Monocytes")],
+rowSums(results[, c("Dendritic cells resting", "Dendritic cells activated")])
+)
+colnames(merged_results) <- c("avg_B.cell", "avg_T.cell", "avg_NK.cell", "avg_Monocyte", "avg_Dendritic.cell")
+
+
+P-value	Correlation	RMSE	Absolute score (no.sumto1)
+
+
+
 # View results
 results
-
 
 test.mixture.matrix.7 <- 'test_bulk_mixture_data/bulk_composition_from_scRNA-seq/bulk_composition_7.tsv'
 test.mixture.matrix.8 <- 'test_bulk_mixture_data/bulk_composition_from_scRNA-seq/bulk_composition_8.tsv'
 
-tmp <- results[, c("B cells naive", 'B cells memory')]
-tmp <- results[, c("T cells CD4 naive",  "T cells CD4 memory resting")]
 
-colSums(tmp)
+# testing
+X <- read.table(sig.matrix, header=T, sep="\t", row.names=1, check.names=F)
+
 
 ################################################################################
 # Deconvolution results evaluation, there are two metrics we use for evaluation:
@@ -61,6 +87,8 @@ cells <- c("T","B","M", "NK", "Dendritic")
 #pdf("Cibersort_ExampleOutput_plot.pdf", width=6, height=12)
 #par(mfrow=c(6,3), mar=c(3,3,3,3))  #arrange the plot in pdf and set the margin
 deconv.results <- read.delim(file)
+
+deconv.results <- merged_results
 
 #load cell proportions from mixture file
 true.T.prop <- unlist(lapply(rownames(deconv.results), function(x) as.numeric(unlist(strsplit(x, split="::", fixed=T))[12])/100))
