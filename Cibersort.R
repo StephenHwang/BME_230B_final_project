@@ -30,31 +30,22 @@ source('bin/CIBERSORT.R')
 #sig.matrix <-"signature_matrix/holiday.txt"    # too many genes, takes too long to run (12366)
 #sig.matrix <-"signature_matrix/LM_joint.txt"    # not as good at LM5
 
+sig.matrix <-"signature_matrix/PBMC_example_signature_matrix_v1.tsv"
+sig.matrix <-"signature_matrix/LM5.txt"        # 550 genes
 sig.matrix <-"signature_matrix/signature_1.txt"
-View(read.table(sig.matrix, header=T, sep="\t", row.names=1, check.names=F))
+sig.matrix <-"signature_matrix/signature_2.txt"
+sig.matrix <-"signature_matrix/signature_3.txt"
+sig.matrix <-"signature_matrix/my_LM5.txt"        # 550 genes
+
+# BEST:
+#sig.matrix <-"signature_matrix/signature_2.txt"
+
+#View(read.table(sig.matrix, header=T, sep="\t", row.names=1, check.names=F))
 
 mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_0.tsv"
 
 results <- CIBERSORT(sig.matrix, mixture.matrix, perm=100, QN=FALSE, absolute=TRUE, abs_method='no.sumto1')
 write.table(results,file="./Cibersort_ExampleOutput.tsv",sep = "\t", quote = F,row.names = T, col.names = T) # write result table to file
-# 1:21 -
-
-## LM22_joint: join columns and re-name
-# merged_results <- cbind(
-# rowSums(results[,  c("B cells naive", "B cells memory" )]),
-# rowSums(results[, c("T cells CD8",
-#             "T cells CD4 naive",
-#             "T cells CD4 memory resting",
-#             "T cells CD4 memory activated",
-#             "T cells follicular helper",
-#             "T cells regulatory (Tregs)",
-#             "T cells gamma delta")]),
-# rowSums(results[, c("NK cells resting", "NK cells activated")]),
-# results[, c("Monocytes")],
-# rowSums(results[, c("Dendritic cells resting", "Dendritic cells activated")])
-# )
-# colnames(merged_results) <- c("avg_B.cell", "avg_T.cell", "avg_NK.cell", "avg_Monocyte", "avg_Dendritic.cell")
-# deconv.results <- merged_results
 
 # View results
 results
@@ -120,14 +111,11 @@ matrix2 <- pbmc.results[, 6:10]
 results.cor <- cor(c(matrix1), c(matrix2), method='pearson')
 results.RMSE <- RMSE(c(matrix1), c(matrix2))
 
+# Print overall Cor and RMSE results
 cat(paste(paste('Sig:', gsub('signature_matrix/', '', sig.matrix)),
       paste('cor:', results.cor),
       paste('RMSE:', results.RMSE),
       sep='\n'))
-
-
-
-
 
 
 
