@@ -59,9 +59,8 @@ CoreAlg <- function(X, y, absolute, abs_method){
         model
     }
 
-    # if(Sys.info()['sysname'] == 'Windows') out <- mclapply(1:svn_itor, res, mc.cores=1) else
+    if(Sys.info()['sysname'] == 'Windows') out <- mclapply(1:svn_itor, res, mc.cores=1) else
     out <- mclapply(1:svn_itor, res, mc.cores=svn_itor)
-    # out <- lapply(1:svn_itor, res)
 
     nusvm <- rep(0,svn_itor)
     corrv <- rep(0,svn_itor)
@@ -133,19 +132,14 @@ CIBERSORT <- function(sig_matrix, mixture_file, perm=0, QN=TRUE, absolute=FALSE,
 
     #read in data
     X <- read.table(sig_matrix,header=T,sep="\t",row.names=1,check.names=F)
-    # Y <- read.table(mixture_file, header=T, sep="\t",check.names=F)
-    Y <- read.table(mixture_file, header=T, sep=" ",check.names=F)
-
-
+    Y <- read.table(mixture_file, header=T, sep="\t",check.names=F)
     #to prevent crashing on duplicated gene symbols, add unique numbers to identical names
-    # dups <- dim(Y)[1] - length(unique(Y[,1]))
-    # if(dups > 0) {
-        # warning(paste(dups," duplicated gene symbol(s) found in mixture file!",sep=""))
-        # browser()
-        # rownames(Y) <- make.names(Y[,1], unique=TRUE)
-    # }else {rownames(Y) <- Y[,1]}
-    # rownames(Y) <- Y[,1]}
-    # Y <- Y[,-1]
+    dups <- dim(Y)[1] - length(unique(Y[,1]))
+    if(dups > 0) {
+        warning(paste(dups," duplicated gene symbol(s) found in mixture file!",sep=""))
+        rownames(Y) <- make.names(Y[,1], unique=TRUE)
+    }else {rownames(Y) <- Y[,1]}
+    Y <- Y[,-1]
 
     X <- data.matrix(X)
     Y <- data.matrix(Y)

@@ -2,10 +2,10 @@
 home.dir <- '/home/stephen/Documents/classes/bme/230B/decon/'
 setwd(home.dir)
 
-source('bin/CIBERSORT.R')
+source('bin/CIBERSORT_test.R')
 
-# sig.matrix <-"signature_matrix/signature_5.txt"
-sig.matrix <-"signature_matrix/signature_2.txt"
+sig.matrix <-"signature_matrix/signature_5.txt"
+# sig.matrix <-"signature_matrix/signature_2.txt"
 
 # make a list of files to run thru
 # gsub to correct output name

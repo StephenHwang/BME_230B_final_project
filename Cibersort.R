@@ -71,13 +71,6 @@ write.table(results,file="./Cibersort_ExampleOutput.tsv",sep = "\t", quote = F,r
 results
 
 
-sig.matrix <-"signature_matrix/signature_5.txt"
-mixture.file <- "/home/stephen/Documents/classes/bme/230B/decon/test_bulk_mixture_data/bulk_composition_from_cell_lines/CellLineD_Tumor_bulk_composition_noise_0.1.tsv"
-
-X <- read.table(sig.matrix,header=T,sep="\t",row.names=1,check.names=F)
-# Y <- read.table(mixture.file, header=T, sep="\t",check.names=F)
-
-Y <- read.table(mixture.file, header=T, sep=" ", check.names=F)
 
 
 
