@@ -32,17 +32,37 @@ source('bin/CIBERSORT.R')
 
 sig.matrix <-"signature_matrix/PBMC_example_signature_matrix_v1.tsv"
 sig.matrix <-"signature_matrix/LM5.txt"        # 550 genes
+sig.matrix <-"signature_matrix/my_LM5.txt"
 sig.matrix <-"signature_matrix/signature_1.txt"
 sig.matrix <-"signature_matrix/signature_2.txt"
 sig.matrix <-"signature_matrix/signature_3.txt"
-sig.matrix <-"signature_matrix/my_LM5.txt"        # 550 genes
-
-# BEST:
-#sig.matrix <-"signature_matrix/signature_2.txt"
-
+sig.matrix <-"signature_matrix/signature_4.txt"
+sig.matrix <-"signature_matrix/signature_5.txt"
+sig.matrix <-"signature_matrix/signature_6.txt"
+sig.matrix <-"signature_matrix/signature_7.txt"
+sig.matrix <-"signature_matrix/signature_10.txt"
 #View(read.table(sig.matrix, header=T, sep="\t", row.names=1, check.names=F))
 
+# BEST:
+sig.matrix <-"signature_matrix/signature_2.txt"
+sig.matrix <-"signature_matrix/signature_5.txt"
+
+# cellLineA
 mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_0.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_0.5.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineA_Tumor_bulk_composition_noise_1.tsv"
+
+# cellLineB
+mixture.matrix <- "train_bulk_mixture_data/CellLineB_Tumor_bulk_composition_noise_0.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineB_Tumor_bulk_composition_noise_0.5.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineB_Tumor_bulk_composition_noise_1.tsv"
+
+# cellLineC
+mixture.matrix <- "train_bulk_mixture_data/CellLineC_Tumor_bulk_composition_noise_0.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineC_Tumor_bulk_composition_noise_0.5.tsv"
+mixture.matrix <- "train_bulk_mixture_data/CellLineC_Tumor_bulk_composition_noise_1.tsv"
+
+
 
 results <- CIBERSORT(sig.matrix, mixture.matrix, perm=100, QN=FALSE, absolute=TRUE, abs_method='no.sumto1')
 write.table(results,file="./Cibersort_ExampleOutput.tsv",sep = "\t", quote = F,row.names = T, col.names = T) # write result table to file
@@ -94,9 +114,9 @@ colnames(pbmc.results) <- c("true.T.prop", "true.B.prop", "true.M.prop", "true.N
 for (cell in cells){
   plot(x=pbmc.results[,paste(c("true.",cell,".prop"), collapse="")], y=pbmc.results[,paste(c(cell,".result"), collapse="")],
        xlab=paste(c("true.",cell,".prop"), collapse=""), ylab=paste(c("cibersort", cell, "result"), collapse="."),
-       main=paste(c(cell, "cell", "in", "Example"), collapse=" "), cex=0.5)
-  mtext(paste(c("true.",cell,".prop"), collapse=""), side=1, line=2, font=1, cex=0.8)
-  mtext(paste(c("cibersort", cell, "result"), collapse="."), side=2, line=2, font=1, cex=0.8)
+       main=paste(c(gsub('signature_matrix/', '', sig.matrix), ':', cell, "cell"), collapse=" "), cex=0.5)
+  #mtext(paste(c("true.",cell,".prop"), collapse=""), side=1, line=2, font=1, cex=0.8)
+  #mtext(paste(c("cibersort", cell, "result"), collapse="."), side=2, line=2, font=1, cex=0.8)
   Corner_text(paste("corr=", round(cor.test(pbmc.results[,paste(c("true.",cell,".prop"), collapse="")],  #calculate pearson correlation score
                                             pbmc.results[,paste(c(cell,".result"), collapse="")], method=c("pearson"))$estimate, 5), sep=" "),location="topleft")
   Corner_text(paste("RMSE=", round(mean(na.omit(unlist(lapply(1:200, function(i) RMSE(pbmc.results[,paste(c(cell,".result"), collapse="")][i], pbmc.results[,paste(c("true.",cell,".prop"), collapse="")][i]))))),3), sep=" "),location="bottomright")
